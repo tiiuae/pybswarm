@@ -18,9 +18,12 @@ def plot_formation(F, name):
     ax = plt.axes(projection='3d')
     ax.plot3D(F[0, :], F[1, :], F[2, :], 'ro')
     plt.title(name)
-    ax.set_xlabel('x, m')
-    ax.set_ylabel('y, m')
-    ax.set_zlabel('z, m')
+    ax.set_xlabel('x---> (m)', fontsize=12)
+    ax.xaxis.set_label_coords(1.05, -0.025)
+    ax.set_ylabel('y--> (m)', fontsize=12,x=2,y=2)
+    ax.set_zlabel('z---> (m)', fontsize=12,x=2,y=2)
+    for i in range(F.shape[1]):
+        ax.text3D(F[0, i], F[1, i], F[2, i], str(i))
     plt.show()
 
 def scale_formation(form, scale):
@@ -28,6 +31,22 @@ def scale_formation(form, scale):
     for i in range(3):
         formNew[i, :] *= scale[i]
     return formNew
+
+def plot_takeoff(F, name):
+    plt.figure()
+    ax = plt.axes()
+    ax.plot(F[0, :], F[1, :], 'ro')
+    plt.title(name)
+    ax.set_xlabel('x---> (m)', fontsize=12,color='blue')
+    ax.set_ylabel('y--> (m)', fontsize=12,color='green')
+    ax.arrow(0, 0, 0, 0.3,head_width = 0.03,width = 0.008,ec ='green')
+    ax.arrow(0, 0, 0.3, 0,head_width = 0.03,width = 0.008,ec ='blue')
+    ax.axis('equal')
+    for i in range(F.shape[1]):
+        ax.text(F[0, i], F[1, i], str(i))
+    plt.show()
+
+
 
 #%% parameters
 
@@ -47,12 +66,14 @@ formTakeoff = np.array([
     [0.5, 1, 0],
 ]).T
 n_drones = formTakeoff.shape[1]
+plot_takeoff(formTakeoff,'takeoff')
 #%%
 
 plot_formation(formTakeoff, 'takeoff')
 points = []
 for i_drone in rotation_order:
     theta = i_drone*2*np.pi/n_drones
+    print(theta,i_drone)
     points.append([0.5*np.cos(theta), 0.5*np.sin(theta), 0])
 formCircle = scale_formation(np.array(points).T, form_scale)
 plot_formation(formCircle, 'circle')
@@ -145,7 +166,7 @@ class Geometry:
     
     def plan_trajectory(self):
         trajectories = []
-        origin = np.array([1.5, 2, 2])
+        origin = np.array([0, 0, 2])
         waypoints = np.array(self.waypoints)
         for drone in range(waypoints.shape[2]):
             pos_wp = waypoints[:, :, drone] + origin
@@ -209,6 +230,8 @@ tgen.animate_trajectories('hooked.mp4', trajectories, 1)
 plt.figure()
 tgen.plot_trajectories_time_history(trajectories)
 plt.show()
+
+tgen.gazebo_animate_trajectories("HookedOnAFeeling.world",trajectories)
 
 #%%
 plt.figure()

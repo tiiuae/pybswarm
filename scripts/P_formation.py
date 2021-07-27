@@ -36,6 +36,21 @@ def scale_formation(form, scale):
         formNew[i, :] *= scale[i]
     return formNew
 
+def plot_takeoff(form, name):
+    plt.figure()
+    ax = plt.axes()
+    F=form.points
+    ax.plot(F[0, :], F[1, :], 'ro')
+    plt.title(name)
+    ax.set_xlabel('x---> (m)', fontsize=12,color='blue')
+    ax.set_ylabel('y--> (m)', fontsize=12,color='green')
+    ax.arrow(0, 0, 0, 0.3,head_width = 0.03,width = 0.008,ec ='green')
+    ax.arrow(0, 0, 0.3, 0,head_width = 0.03,width = 0.008,ec ='blue')
+    ax.axis('equal')
+    for i in range(F.shape[1]):
+        ax.text(F[0, i], F[1, i], str(i))
+    plt.show()
+
 #%% takeoff
 formations = {}
 formations['takeoff'] = Formation(
@@ -48,7 +63,7 @@ formations['takeoff'] = Formation(
         [0.5, 1, 0],
         ]).T,
     order=[0, 1, 2, 3, 4, 5])
-plot_formation(formations['takeoff'], 'takeoff')
+plot_takeoff(formations['takeoff'], 'takeoff')
 
 
 
