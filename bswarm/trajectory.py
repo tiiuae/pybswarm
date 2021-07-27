@@ -33,6 +33,8 @@ import matplotlib.animation as animation
 
 from typing import List
 
+import xml.etree.cElementTree as ET
+from xml.dom import minidom
 
 class Trajectory1D:
 
@@ -387,3 +389,80 @@ def trajectories_to_json(trajectories: List[Trajectory4D]):
     for drone, traj in enumerate(trajectories):
         formation[drone] = traj.coef_array().tolist()
     return formation
+
+
+def gazebo_animate_trajectories(filename , trajectories: List[Trajectory4D]) -> None:
+    
+    dataLines = []
+    for traj in trajectories:
+        x = traj.eval()[1]
+        dataLines.append(x.T)
+
+    dataLines = np.asarray(dataLines)
+    
+    sdf = ET.Element("sdf", version="1.6")
+    world = ET.SubElement(sdf, "world" , name="default")
+
+    include = ET.SubElement(world, "include")
+    ET.SubElement(include,"uri").text = "model://ground_plane"
+
+    include = ET.SubElement(world, "include")
+    ET.SubElement(include,"uri").text = "model://sun"
+
+    include = ET.SubElement(world, "include")
+    ET.SubElement(include,"uri").text = "model://tii_lab_noceil"
+    ET.SubElement(include,"pose").text = "-0.3 0.4544 3.385 0 0 -1.57"
+    
+    droneNo = 1
+    for drone in dataLines:
+
+        actor_name = "Drone"+str(droneNo)
+        actor = ET.SubElement(world, "actor",name=actor_name)
+
+        link_name = actor_name + "_link"
+        link = ET.SubElement(actor, "link",name=link_name)
+
+        visual_name = actor_name + "_visual"
+        visual = ET.SubElement(link, "visual",name="Drone1_visual")
+
+        geometry = ET.SubElement(visual, "geometry")
+
+        sphere = ET.SubElement(geometry , "sphere")
+
+        ET.SubElement(sphere,"radius").text = "0.05"
+
+        material = ET.SubElement(visual, "material")
+
+        material_script = ET.SubElement(material , "script")
+
+        ET.SubElement(material_script,"uri").text = "file://media/materials/scripts/gazebo.material"
+        ET.SubElement(material_script,"name").text = "Gazebo/Red"
+
+
+        script = ET.SubElement(actor , "script")
+
+        ET.SubElement(script,"loop").text = "true"
+        ET.SubElement(script,"auto_start").text = "true"
+        
+        trajectory_name = actor_name + "_trajectory"
+
+        trajectory = ET.SubElement(script, "trajectory",id="1", type=trajectory_name)
+        
+        for i in range(drone.shape[1]):
+            waypoint = ET.SubElement(trajectory , "waypoint")
+            ET.SubElement(waypoint,"time").text = str(i/10)
+            pos = str(drone[0,i]) + " " + str(drone[1,i]) + " " + str(drone[2,i]) 
+            pos = pos + " 0 0 0"
+            ET.SubElement(waypoint,"pose").text = pos
+
+        droneNo += 1
+        
+        tree = ET.ElementTree(sdf)
+
+        tree = minidom.parseString(ET.tostring(sdf)).toprettyxml(indent="   ")
+        
+        with open(filename, "w") as f:
+            f.write(tree)
+
+
+    
