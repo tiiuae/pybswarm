@@ -32,7 +32,8 @@ def scale_formation(form, scale):
 #%% parameters
 
 # defines how the drones are ordered for circles etc.
-rotation_order = [4, 3, 2, 5, 0, 1]
+# rotation_order = [4, 3, 2, 5, 0, 1]
+rotation_order = [0, 2, 1]
 
 # scaling for formation
 form_scale = np.array([1.5, 1.5, 1])
@@ -43,9 +44,6 @@ form_scale = np.array([1.5, 1.5, 1])
 
 # the takeoff formation
 formTakeoff = np.array([
-    [-0.5, -1, 0],
-    [-0.5, 0, 0],
-    [-0.5, 1, 0],
     [0.5, -1, 0],
     [0.5, 0, 0],
     [0.5, 1, 0],
@@ -161,7 +159,7 @@ g = Geometry()
 g.sin_wave(form=formTakeoff, n=8, duration=16, color='red')
 g.goto(form=formCircle, duration=2, color='blue')
 g.rotate(form=formCircle, n=6, duration=12, color='green')
-g.rotate(form=formTriangle, n=6, duration=12, color='white')
+# g.rotate(form=formTriangle, n=6, duration=12, color='white')
 g.goto(form=formCircle, duration=2, color='gold')
 g.spiral(form=formCircle, z=1, n=6, duration=12, color='red')
 g.goto(formTakeoff, 2, color='blue')
@@ -171,7 +169,7 @@ g.goto(formTakeoff, 2, color='blue')
 #%% plan trajectories
 trajectories, data = g.plan_trajectory()
 
-with open('scripts/data/geometry.json', 'w') as f:
+with open('scripts/data/geometry_3drone.json', 'w') as f:
     json.dump(data, f)
 
 tgen.plot_trajectories(trajectories)

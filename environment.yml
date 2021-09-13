@@ -1,0 +1,11 @@
+name: bswarm
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - pip
+  - patchelf
+  - cx_freeze
+  - matplotlib
+  - pip:
+    - cfclient
