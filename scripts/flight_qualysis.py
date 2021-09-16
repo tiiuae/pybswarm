@@ -29,16 +29,16 @@ if sys.version_info[0] != 3:
 
 # Change uris and sequences according to your setup
 DRONES = [
-    'radio://0/80/2M/E7E7E7E700'
-    'radio://0/80/2M/E7E7E7E701'
-    'radio://0/80/2M/E7E7E7E702'
+    'radio://0/80/2M/E7E7E7E700',
+    'radio://0/80/2M/E7E7E7E701',
+    'radio://0/80/2M/E7E7E7E702',
 
-    'radio://0/80/2M/E7E7E7E703'
-    'radio://0/80/2M/E7E7E7E704'
-    'radio://0/80/2M/E7E7E7E705'
+    'radio://0/80/2M/E7E7E7E703',
+    'radio://0/80/2M/E7E7E7E704',
+    'radio://0/80/2M/E7E7E7E705',
 
-    'radio://0/80/2M/E7E7E7E706'
-    'radio://0/80/2M/E7E7E7E707'
+    'radio://0/80/2M/E7E7E7E706',
+    'radio://0/80/2M/E7E7E7E707',
     'radio://0/80/2M/E7E7E7E708'
 ]
 
