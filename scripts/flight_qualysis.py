@@ -43,6 +43,12 @@ DRONES = [
 ]
 
 SEND_FULL_POSE = True
+MAX_VELOCITY = 0.4 # m/s
+
+# This is the fence of the demo area. Marked by black tape.
+# We will automatically land when it gets out of this fence.
+FENCE_MIN = [ -2.5, -2.5, 0 ]
+FENCE_MAX = [ 2.5, 2.5, 3 ]
 
 
 def assignments(count):
@@ -111,7 +117,7 @@ class QtmWrapper(Thread):
     async def _connect(self):
         # qtm_instance = await self._discover()
         # host = qtm_instance.host
-        host = "192.168.1.2"
+        host = "192.168.254.1"
         print('Connecting to QTM on ' + host)
         self.connection = await qtm.connect(host=host, version="1.20") # version 1.21 has weird 6DOF labels, so using 1.20 here
 
@@ -441,6 +447,10 @@ def preflight_sequence(scf: SyncCrazyflie):
     cf.param.set_value('posCtlPid.yKp', '1')
     cf.param.set_value('posCtlPid.zKp', '1')
 
+    # set maximum velocity (m/s)
+    cf.param.set_value('posCtlPid.xyVelMax', MAX_VELOCITY)
+    cf.param.set_value('posCtlPid.zVelMax', MAX_VELOCITY)
+
     # check battery level
     check_battery(scf, 3.7)
 
@@ -541,7 +551,9 @@ def land_sequence(scf: Crazyflie):
     try:
         cf = scf.cf  # type: Crazyflie
         commander = cf.high_level_commander  # type: cflib.HighLevelCOmmander
-        commander.land(0.0, 3.0)
+        for z in range(5, 0, -1):
+            cf.commander.send_hover_setpoint(0, 0, 0, float(z) / 10)
+            time.sleep(0.15)
         print('Landing...')
         sleep_while_checking_stable(scf, tf_sec=3)
 
