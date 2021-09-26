@@ -48,7 +48,7 @@ MAX_VELOCITY = 0.4 # m/s
 # This is the fence of the demo area. Marked by black tape.
 # We will automatically land when it gets out of this fence.
 FENCE_MIN = [ -2.5, -2.5, 0 ]
-FENCE_MAX = [ 2.5, 2.5, 3 ]
+FENCE_MAX = [ 2.5, 2.5, 1.8 ]
 
 
 def assignments(count):
@@ -178,6 +178,11 @@ class QtmWrapper(Thread):
                         print("======= LOST RB TRACKING : " + body_name)
                         continue
 
+                    # if FENCE_MIN[0]<x<FENCE_MAX[0] and FENCE_MIN[1]<y<FENCE_MAX[1] and FENCE_MIN[2]<z<FENCE_MAX[2]:
+                    #     print("Within safety boundaries")
+                    # else:
+                    #     print("======== Outside safety bounds!!!")
+
                     self.on_pose[body_name]([x, y, z, rot])
 
     async def _close(self):
@@ -202,39 +207,48 @@ def send_extpose_rot_matrix(scf: SyncCrazyflie, x, y, z, rot):
     """
     cf = scf.cf
 
-    if SEND_FULL_POSE:
-        trace = rot[0][0] + rot[1][1] + rot[2][2]
-        if trace > 0:
-            a = _sqrt(1 + trace)
-            qw = 0.5*a
-            b = 0.5/a
-            qx = (rot[2][1] - rot[1][2])*b
-            qy = (rot[0][2] - rot[2][0])*b
-            qz = (rot[1][0] - rot[0][1])*b
-        elif rot[0][0] > rot[1][1] and rot[0][0] > rot[2][2]:
-            a = _sqrt(1 + rot[0][0] - rot[1][1] - rot[2][2])
-            qx = 0.5*a
-            b = 0.5/a
-            qw = (rot[2][1] - rot[1][2])*b
-            qy = (rot[1][0] + rot[0][1])*b
-            qz = (rot[0][2] + rot[2][0])*b
-        elif rot[1][1] > rot[2][2]:
-            a = _sqrt(1 - rot[0][0] + rot[1][1] - rot[2][2])
-            qy = 0.5*a
-            b = 0.5/a
-            qw = (rot[0][2] - rot[2][0])*b
-            qx = (rot[1][0] + rot[0][1])*b
-            qz = (rot[2][1] + rot[1][2])*b
-        else:
-            a = _sqrt(1 - rot[0][0] - rot[1][1] + rot[2][2])
-            qz = 0.5*a
-            b = 0.5/a
-            qw = (rot[1][0] - rot[0][1])*b
-            qx = (rot[0][2] + rot[2][0])*b
-            qy = (rot[2][1] + rot[1][2])*b
+    # if SEND_FULL_POSE:
+    trace = rot[0][0] + rot[1][1] + rot[2][2]
+    if trace > 0:
+        a = _sqrt(1 + trace)
+        qw = 0.5*a
+        b = 0.5/a
+        qx = (rot[2][1] - rot[1][2])*b
+        qy = (rot[0][2] - rot[2][0])*b
+        qz = (rot[1][0] - rot[0][1])*b
+    elif rot[0][0] > rot[1][1] and rot[0][0] > rot[2][2]:
+        a = _sqrt(1 + rot[0][0] - rot[1][1] - rot[2][2])
+        qx = 0.5*a
+        b = 0.5/a
+        qw = (rot[2][1] - rot[1][2])*b
+        qy = (rot[1][0] + rot[0][1])*b
+        qz = (rot[0][2] + rot[2][0])*b
+    elif rot[1][1] > rot[2][2]:
+        a = _sqrt(1 - rot[0][0] + rot[1][1] - rot[2][2])
+        qy = 0.5*a
+        b = 0.5/a
+        qw = (rot[0][2] - rot[2][0])*b
+        qx = (rot[1][0] + rot[0][1])*b
+        qz = (rot[2][1] + rot[1][2])*b
+    else:
+        a = _sqrt(1 - rot[0][0] - rot[1][1] + rot[2][2])
+        qz = 0.5*a
+        b = 0.5/a
+        qw = (rot[1][0] - rot[0][1])*b
+        qx = (rot[0][2] + rot[2][0])*b
+        qy = (rot[2][1] + rot[1][2])*b
+
+    
+    
+    if FENCE_MIN[0]<x<FENCE_MAX[0] and FENCE_MIN[1]<y<FENCE_MAX[1] and FENCE_MIN[2]<z<FENCE_MAX[2]:
+        print("Within safety boundaries")
         cf.extpos.send_extpose(x, y, z, qx, qy, qz, qw)
     else:
-        cf.extpos.send_extpos(x, y, z)
+        print("======== Outside safety bounds!!!")
+        land_sequence(scf)
+        kill_motor_sequence(scf)
+    # else:
+    #     cf.extpos.send_extpos(x, y, z)
 
 class Uploader:
     def __init__(self, trajectory_mem):
