@@ -52,6 +52,9 @@ FENCE_MAX = [ 2.5, 2.5, 3 ]
 
 
 def assignments(count):
+    if count > len(DRONES) or count <= 0:
+        raise ValueError('unknown number of drones')
+
     uris = DRONES[:count]
     n_drones = len(uris)
 
