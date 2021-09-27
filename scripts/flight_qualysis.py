@@ -50,6 +50,12 @@ MAX_VELOCITY = 0.4 # m/s
 FENCE_MIN = [ -2.5, -2.5, 0 ]
 FENCE_MAX = [ 2.5, 2.5, 1.8 ]
 FENCE_MARGIN = 0.2
+TRACKINGLOSS_THRESHOLD = 50
+tracking_loss_counter = dict()
+for i in range(n_drones):
+    tracking_loss_counter['cf'+str(i)] = 0
+
+
 
 
 def assignments(count):
@@ -177,6 +183,7 @@ class QtmWrapper(Thread):
                     # Make sure we got a position
                     if math.isnan(x):
                         print("======= LOST RB TRACKING : " + body_name)
+                        tracking_loss_counter[body_name]+=1
                         continue
 
                     self.on_pose[body_name]([x, y, z, rot])
@@ -235,7 +242,11 @@ def send_extpose_rot_matrix(scf: SyncCrazyflie, x, y, z, rot):
         qy = (rot[2][1] + rot[1][2])*b
 
     
-    
+    for key,val in tracking_loss_counter:
+        if val > TRACKINGLOSS_THRESHOLD:
+            land_sequence(scf)
+            kill_motor_sequence(scf)
+
     if (FENCE_MIN[0] + FENCE_MARGIN)<x<(FENCE_MAX[0] - FENCE_MARGIN) and (FENCE_MIN[1]+FENCE_MARGIN)<y<(FENCE_MAX[1]-FENCE_MARGIN) and FENCE_MIN[2]<z<(FENCE_MAX[2]-FENCE_MARGIN):
         print("Within safety boundaries")
         cf.extpos.send_extpose(x, y, z, qx, qy, qz, qw)
@@ -522,6 +533,8 @@ def go_sequence(scf: SyncCrazyflie, data: Dict):
         cf.param.set_value('ring.solidGreen', str(255))
         cf.param.set_value('ring.solidBlue', str(0))
         time.sleep(0.1)
+
+
 
         for color, delay, T in zip(data['color'], data['delay'], data['T']):
             # change led color
