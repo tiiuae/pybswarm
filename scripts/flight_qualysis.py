@@ -49,6 +49,7 @@ MAX_VELOCITY = 0.4 # m/s
 # We will automatically land when it gets out of this fence.
 FENCE_MIN = [ -2.5, -2.5, 0 ]
 FENCE_MAX = [ 2.5, 2.5, 1.8 ]
+FENCE_MARGIN = 0.2
 
 
 def assignments(count):
@@ -178,11 +179,6 @@ class QtmWrapper(Thread):
                         print("======= LOST RB TRACKING : " + body_name)
                         continue
 
-                    # if FENCE_MIN[0]<x<FENCE_MAX[0] and FENCE_MIN[1]<y<FENCE_MAX[1] and FENCE_MIN[2]<z<FENCE_MAX[2]:
-                    #     print("Within safety boundaries")
-                    # else:
-                    #     print("======== Outside safety bounds!!!")
-
                     self.on_pose[body_name]([x, y, z, rot])
 
     async def _close(self):
@@ -240,7 +236,7 @@ def send_extpose_rot_matrix(scf: SyncCrazyflie, x, y, z, rot):
 
     
     
-    if FENCE_MIN[0]<x<FENCE_MAX[0] and FENCE_MIN[1]<y<FENCE_MAX[1] and FENCE_MIN[2]<z<FENCE_MAX[2]:
+    if (FENCE_MIN[0] + FENCE_MARGIN)<x<(FENCE_MAX[0] - FENCE_MARGIN) and (FENCE_MIN[1]+FENCE_MARGIN)<y<(FENCE_MAX[1]-FENCE_MARGIN) and FENCE_MIN[2]<z<(FENCE_MAX[2]-FENCE_MARGIN):
         print("Within safety boundaries")
         cf.extpos.send_extpose(x, y, z, qx, qy, qz, qw)
     else:
