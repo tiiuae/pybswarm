@@ -52,11 +52,6 @@ FENCE_MAX = [ 2.5, 2.5, 1.8 ]
 FENCE_MARGIN = 0.2
 TRACKINGLOSS_THRESHOLD = 50
 tracking_loss_counter = dict()
-for i in range(n_drones):
-    tracking_loss_counter['cf'+str(i)] = 0
-
-
-
 
 def assignments(count):
     if count > len(DRONES) or count <= 0:
@@ -64,6 +59,8 @@ def assignments(count):
 
     uris = DRONES[:count]
     n_drones = len(uris)
+    for i in range(n_drones):
+        tracking_loss_counter['cf'+str(i)] = 0
 
     body_names = []
     ids = [[1,3,4,2]]
@@ -242,18 +239,18 @@ def send_extpose_rot_matrix(scf: SyncCrazyflie, x, y, z, rot):
         qy = (rot[2][1] + rot[1][2])*b
 
     
-    for key,val in tracking_loss_counter:
-        if val > TRACKINGLOSS_THRESHOLD:
-            land_sequence(scf)
-            kill_motor_sequence(scf)
+    # for key,val in tracking_loss_counter:
+    #     if val > TRACKINGLOSS_THRESHOLD:
+    #         land_sequence(scf)
+    #         kill_motor_sequence(scf)
 
-    if (FENCE_MIN[0] + FENCE_MARGIN)<x<(FENCE_MAX[0] - FENCE_MARGIN) and (FENCE_MIN[1]+FENCE_MARGIN)<y<(FENCE_MAX[1]-FENCE_MARGIN) and FENCE_MIN[2]<z<(FENCE_MAX[2]-FENCE_MARGIN):
-        print("Within safety boundaries")
-        cf.extpos.send_extpose(x, y, z, qx, qy, qz, qw)
-    else:
-        print("======== Outside safety bounds!!!")
-        land_sequence(scf)
-        kill_motor_sequence(scf)
+    # if (FENCE_MIN[0] + FENCE_MARGIN)<x<(FENCE_MAX[0] - FENCE_MARGIN) and (FENCE_MIN[1]+FENCE_MARGIN)<y<(FENCE_MAX[1]-FENCE_MARGIN) and FENCE_MIN[2]<z<(FENCE_MAX[2]-FENCE_MARGIN):
+    #     print("Within safety boundaries")
+    #     cf.extpos.send_extpose(x, y, z, qx, qy, qz, qw)
+    # else:
+    #     print("======== Outside safety bounds!!!")
+    #     land_sequence(scf)
+    #     kill_motor_sequence(scf)
     # else:
     #     cf.extpos.send_extpos(x, y, z)
 
@@ -400,11 +397,26 @@ def sleep_while_checking_stable(scf: SyncCrazyflie, tf_sec, dt_sec=0.1):
             log_data = log_entry[1]
             roll = log_data['stabilizer.roll']
             batt = log_data['pm.vbat']
+            x = log_data['ext_pos.X']
+            y = log_data['ext_pos.Y']
+            z = log_data['ext_pos.Z']
+            if x<(FENCE_MIN[0] + FENCE_MARGIN) and x>(FENCE_MAX[0] - FENCE_MARGIN) and y<(FENCE_MIN[1]+FENCE_MARGIN) and y>(FENCE_MAX[1]-FENCE_MARGIN) and 
+            z<FENCE_MIN[2] and z>(FENCE_MAX[2]-FENCE_MARGIN):
+                raise UnstableException("Outside safety bounds")
+                land_sequence(scf)
+                kill_motor_sequence(scf)
+            
+            for key,val in tracking_loss_counter:
+                if val>TRACKINGLOSS_THRESHOLD:
+                    land_sequence(scf)
+                    kill_motor_sequence(scf)
+
             if np.abs(roll) > 60:
                 raise UnstableException("flip detected {:10.4f} deg, for {:s}".format(roll, scf.cf.link_uri))
             # print("battery {:10.4f} V, for {:s}".format(batt, scf.cf.link_uri))
             if batt < 3.0:
                 raise LowBatteryException("low battery {:10.4f} V, for {:s}".format(batt, scf.cf.link_uri))
+            if
             t_sec += dt_sec
             if t_sec>tf_sec:
                 return
