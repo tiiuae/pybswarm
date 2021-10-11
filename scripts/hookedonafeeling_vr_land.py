@@ -58,16 +58,16 @@ rotation_order = [4, 3, 2, 5, 0, 1]
 form_scale = np.array([1.8, 1.8, 1])
 
 # the takeoff formation
-formTakeoff = np.array([
-    [0.03611, -0.36866, 0],
-    [0, 0, 0],
-    [0.03367, 0.31552, 0],
-    [0.59428, -0.31487, 0],
-    [0.61493,  0, 0],
-    [0.60494, 0.32676, 0],
-]).T
+# formTakeoff_1 = np.array([
+#     [0.03611, -0.36866, 0],
+#     [0, 0, 0],
+#     [0.03367, 0.31552, 0],
+#     [0.59428, -0.31487, 0],
+#     [0.61493,  0, 0],
+#     [0.60494, 0.32676, 0],
+# ]).T
 
-formTakeoff_1 = np.array([
+formTakeoff = np.array([
     [-0.5, -1, 0],
     [-0.5, 0, 0],
     [-0.5, 1, 0],
@@ -83,23 +83,32 @@ plot_takeoff(formTakeoff,'takeoff')
 
 
 # the land pattern
+# formblockLand = np.array([
+#     [-1.315832649,-2.540626293, 0],
+#     [-1.585084333, -1.293981881, 0],
+#     [-2.087212219, 1.921953517, 0],
+#     [1.587480491, -1.408322263, 0],
+#     [2.04135434,-0.569203645, 0],
+#     [2.5736968, 1.7155615, 0],
+# ]).T
+
 formblockLand = np.array([
-    [-1.315832649,-2.540626293, 0],
-    [-1.585084333, -1.293981881, 0],
-    [-2.087212219, 1.921953517, 0],
-    [1.587480491, -1.408322263, 0],
-    [2.04135434,-0.569203645, 0],
-    [2.5736968, 1.7155615, 0],
+    [-1.306,-2.599, 0],
+    [-1.491, -1.361, 0],
+    [-2.122, 1.917, 0],
+    [1.674, -1.433, 0],
+    [2.060,-0.5529, 0],
+    [2.548, 1.879, 0],
 ]).T
 
 # the land pattern
 formblockLand_1 = np.array([
-    [-1.315832649,-2.540626293, -0.95],
-    [-1.585084333, -1.293981881, -0.95],
-    [-2.087212219, 1.921953517, -0.95],
-    [1.587480491, -1.408322263, -0.95],
-    [2.04135434,-0.569203645, -0.95],
-    [2.5736968, 1.7155615, -0.95],
+    [-1.306,-2.599, -1.0],
+    [-1.491, -1.361, -1.5],
+    [-2.122, 1.917, -1.0],
+    [1.674, -1.433, -1.5],
+    [2.060,-0.5529, -1.0],
+    [2.548, 1.879, -1.0],
 ]).T
 
 n_drones = formblockLand.shape[1]
@@ -228,19 +237,19 @@ class Geometry:
 # create trajectory waypoints
 g = Geometry()
 #ooga chaka
-g.goto(form=formTakeoff, duration=2, color='blue')
+g.goto(form=formTakeoff, duration=9, color='blue')
 
-g.goto(form=formTakeoff_1, duration=4, color='blue')
-g.sin_wave(form=formTakeoff_1, n=4, duration=7, color='gold')
+# g.goto(form=formTakeoff_1, duration=4, color='blue')
+g.sin_wave(form=formTakeoff, n=4, duration=10, color='gold')
 
 #IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII gotta feeling
-g.goto(form=formCircle, duration=2, color='red')
-g.spiral(form=formCircle, z=1, n=6, duration=12, color='red')
+g.goto(form=formCircle, duration=4, color='red')
+g.spiral(form=formCircle, z=1, n=6, duration=10, color='red')
 #less popular part of chorus
 g.goto(form=formCircle, duration=2, color='green')
-g.rotate(form=formTriangle, n=6, duration=17, color='white')
+g.rotate(form=formTriangle, n=6, duration=10, color='white')
 #before alcohol
-g.rotate(form=formCircle, n=6, duration=12, color='gold')
+g.rotate(form=formCircle, n=6, duration=10, color='gold')
 ###g.goto(form=formTakeoff, duration=2, color='blue')
 
 
@@ -251,8 +260,8 @@ g.rotate(form=formCircle, n=6, duration=12, color='gold')
 #g.spiral(form=formCircle, z=1, n=7, duration=28)
 #g.goto(form=formCircle, duration=2)
 #g.rotate(form=formTriangle, n=5, duration=18)
-g.goto(formblockLand, duration=6, color='green')
-g.goto(formblockLand_1, duration=3, color='green')
+g.goto(formblockLand, duration=7, color='green')
+g.goto(formblockLand_1, duration=5, color='green')
 
 ##a
 #18 secs for next segment of song
