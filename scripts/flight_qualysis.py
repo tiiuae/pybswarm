@@ -121,7 +121,7 @@ class QtmWrapper(Thread):
     async def _connect(self):
         # qtm_instance = await self._discover()
         # host = qtm_instance.host
-        host = "192.168.254.1"
+        host = "192.168.0.2"
         print('Connecting to QTM on ' + host)
         self.connection = await qtm.connect(host=host, version="1.20") # version 1.21 has weird 6DOF labels, so using 1.20 here
 
@@ -203,48 +203,39 @@ def send_extpose_rot_matrix(scf: SyncCrazyflie, x, y, z, rot):
     """
     cf = scf.cf
 
-    # if SEND_FULL_POSE:
-    trace = rot[0][0] + rot[1][1] + rot[2][2]
-    if trace > 0:
-        a = _sqrt(1 + trace)
-        qw = 0.5*a
-        b = 0.5/a
-        qx = (rot[2][1] - rot[1][2])*b
-        qy = (rot[0][2] - rot[2][0])*b
-        qz = (rot[1][0] - rot[0][1])*b
-    elif rot[0][0] > rot[1][1] and rot[0][0] > rot[2][2]:
-        a = _sqrt(1 + rot[0][0] - rot[1][1] - rot[2][2])
-        qx = 0.5*a
-        b = 0.5/a
-        qw = (rot[2][1] - rot[1][2])*b
-        qy = (rot[1][0] + rot[0][1])*b
-        qz = (rot[0][2] + rot[2][0])*b
-    elif rot[1][1] > rot[2][2]:
-        a = _sqrt(1 - rot[0][0] + rot[1][1] - rot[2][2])
-        qy = 0.5*a
-        b = 0.5/a
-        qw = (rot[0][2] - rot[2][0])*b
-        qx = (rot[1][0] + rot[0][1])*b
-        qz = (rot[2][1] + rot[1][2])*b
-    else:
-        a = _sqrt(1 - rot[0][0] - rot[1][1] + rot[2][2])
-        qz = 0.5*a
-        b = 0.5/a
-        qw = (rot[1][0] - rot[0][1])*b
-        qx = (rot[0][2] + rot[2][0])*b
-        qy = (rot[2][1] + rot[1][2])*b
-
-    
-    
-    if (FENCE_MIN[0] + FENCE_MARGIN)<x<(FENCE_MAX[0] - FENCE_MARGIN) and (FENCE_MIN[1]+FENCE_MARGIN)<y<(FENCE_MAX[1]-FENCE_MARGIN) and FENCE_MIN[2]<z<(FENCE_MAX[2]-FENCE_MARGIN):
-        print("Within safety boundaries")
+    if SEND_FULL_POSE:
+        trace = rot[0][0] + rot[1][1] + rot[2][2]
+        if trace > 0:
+            a = _sqrt(1 + trace)
+            qw = 0.5*a
+            b = 0.5/a
+            qx = (rot[2][1] - rot[1][2])*b
+            qy = (rot[0][2] - rot[2][0])*b
+            qz = (rot[1][0] - rot[0][1])*b
+        elif rot[0][0] > rot[1][1] and rot[0][0] > rot[2][2]:
+            a = _sqrt(1 + rot[0][0] - rot[1][1] - rot[2][2])
+            qx = 0.5*a
+            b = 0.5/a
+            qw = (rot[2][1] - rot[1][2])*b
+            qy = (rot[1][0] + rot[0][1])*b
+            qz = (rot[0][2] + rot[2][0])*b
+        elif rot[1][1] > rot[2][2]:
+            a = _sqrt(1 - rot[0][0] + rot[1][1] - rot[2][2])
+            qy = 0.5*a
+            b = 0.5/a
+            qw = (rot[0][2] - rot[2][0])*b
+            qx = (rot[1][0] + rot[0][1])*b
+            qz = (rot[2][1] + rot[1][2])*b
+        else:
+            a = _sqrt(1 - rot[0][0] - rot[1][1] + rot[2][2])
+            qz = 0.5*a
+            b = 0.5/a
+            qw = (rot[1][0] - rot[0][1])*b
+            qx = (rot[0][2] + rot[2][0])*b
+            qy = (rot[2][1] + rot[1][2])*b
         cf.extpos.send_extpose(x, y, z, qx, qy, qz, qw)
     else:
-        print("======== Outside safety bounds!!!")
-        land_sequence(scf)
-        kill_motor_sequence(scf)
-    # else:
-    #     cf.extpos.send_extpos(x, y, z)
+        cf.extpos.send_extpos(x, y, z)
 
 class Uploader:
     def __init__(self, trajectory_mem):
@@ -464,6 +455,9 @@ def preflight_sequence(scf: SyncCrazyflie):
     cf.param.set_value('posCtlPid.xyVelMax', MAX_VELOCITY)
     cf.param.set_value('posCtlPid.zVelMax', MAX_VELOCITY)
 
+    # enable logging
+    cf.param.set_value('usd.logging', '1')
+
     # check battery level
     check_battery(scf, 3.7)
 
@@ -564,15 +558,23 @@ def land_sequence(scf: Crazyflie):
     try:
         cf = scf.cf  # type: Crazyflie
         commander = cf.high_level_commander  # type: cflib.HighLevelCOmmander
-        for z in range(5, 0, -1):
-            cf.commander.send_hover_setpoint(0, 0, 0, float(z) / 10)
-            time.sleep(0.15)
+        # for z in range(5, 0, -1):
+        #     cf.commander.send_hover_setpoint(0, 0, 0, float(z) / 10)
+        #     time.sleep(0.15)
+        commander.land(0.0, 1.0) #default 8, block landing: 1
         print('Landing...')
-        sleep_while_checking_stable(scf, tf_sec=3)
+        # this should be +1 second than previous (commander.land)
+        # time.sleep(2) #default 9, block landing: 2
+        # print('Landing...')
+        # sleep_while_checking_stable(scf, tf_sec=1)
 
         # disable led to save battery
         cf.param.set_value('ring.effect', '0')
+        
+        # end logging
+        cf.param.set_value('usd.logging', '0')
         commander.stop()
+
     except Exception as e:
         print(e)
         kill_motor_sequence(scf)
