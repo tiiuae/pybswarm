@@ -480,7 +480,7 @@ def takeoff_sequence(scf: SyncCrazyflie):
         cf.param.set_value('ring.solidGreen', str(255))
         cf.param.set_value('ring.solidBlue', str(0))
         commander.takeoff(1.5, 3.0)
-        sleep_while_checking_stable(scf, tf_sec=15)
+        #sleep_while_checking_stable(scf, tf_sec=15)
 
     except UnstableException as e:
         print(e)
@@ -523,13 +523,13 @@ def go_sequence(scf: SyncCrazyflie, data: Dict):
             green = int(intensity * color[1])
             blue = int(intensity * color[2])
             #print('setting color', red, blue, green)
-            sleep_while_checking_stable(scf, tf_sec=delay)
+            #sleep_while_checking_stable(scf, tf_sec=delay)
             cf.param.set_value('ring.solidRed', str(red))
             cf.param.set_value('ring.solidBlue', str(blue))
             cf.param.set_value('ring.solidGreen', str(green))
             # wait for leg to complete
             # print('sleeping leg duration', leg_duration)
-            sleep_while_checking_stable(scf, tf_sec=T - delay)
+            #sleep_while_checking_stable(scf, tf_sec=T - delay)
         
     except UnstableException as e:
         print(e)
